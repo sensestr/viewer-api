@@ -278,7 +278,7 @@ const init = async () => {
 
   server.route({
     method: "GET",
-    path: "/devices/{id}",
+    path: "/viewers/{id}",
     options: {
       handler: async (request, h) => {
 
@@ -320,7 +320,7 @@ const init = async () => {
 
   server.route({
     method: "PUT",
-    path: "/devices/{id}",
+    path: "/viewers/{id}",
     options: {
       handler: async (request, h) => {
         const payload = request.payload;
