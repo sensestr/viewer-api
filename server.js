@@ -31,14 +31,14 @@ const init = async () => {
     host: "0.0.0.0",
     routes: {
       cors: {
-          origin: ['*'], // an array of origins or 'ignore'
-          headers: ['Authorization'], // an array of strings - 'Access-Control-Allow-Headers'
-          exposedHeaders: ['Accept'], // an array of exposed headers - 'Access-Control-Expose-Headers',
-          additionalExposedHeaders: ['Accept'], // an array of additional exposed headers
-          maxAge: 60,
-          credentials: true // boolean - 'Access-Control-Allow-Credentials'
+        origin: ['*'], // an array of origins or 'ignore'
+        headers: ['Authorization'], // an array of strings - 'Access-Control-Allow-Headers'
+        exposedHeaders: ['Accept'], // an array of exposed headers - 'Access-Control-Expose-Headers',
+        additionalExposedHeaders: ['Accept'], // an array of additional exposed headers
+        maxAge: 60,
+        credentials: true // boolean - 'Access-Control-Allow-Credentials'
       }
-  }
+    }
   });
 
   await server.register([
@@ -103,7 +103,7 @@ const init = async () => {
     options: {
       auth: false,
       handler: async (request, h) => {
-        return h.response({health: 'OK'})
+        return h.response({ health: 'OK' })
       }
     }
   })
@@ -182,7 +182,11 @@ const init = async () => {
               ownerId: Joi.string(),
               sessionId: Joi.objectId(),
               active: Joi.boolean(),
-              podIp: Joi.string().ip()
+              podIp: Joi.string().ip({
+                version: [
+                  'ipv4',
+                ]
+              })
             })
           ),
         }),
@@ -257,7 +261,11 @@ const init = async () => {
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
           active: Joi.boolean(),
-          podIp: Joi.string().ip()
+          podIp: Joi.string().ip({
+            version: [
+              'ipv4',
+            ]
+          })
         }),
       },
       response: {
@@ -270,7 +278,11 @@ const init = async () => {
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
           active: Joi.boolean(),
-          podIp: Joi.string().ip()
+          podIp: Joi.string().ip({
+            version: [
+              'ipv4',
+            ]
+          })
         }),
       },
     },
@@ -312,7 +324,11 @@ const init = async () => {
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
           active: Joi.boolean(),
-          podIp: Joi.string().ip()
+          podIp: Joi.string().ip({
+            version: [
+              'ipv4',
+            ]
+          })
         }),
       },
     },
@@ -400,7 +416,11 @@ const init = async () => {
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
           active: Joi.boolean(),
-          podIp: Joi.string().ip()
+          podIp: Joi.string().ip({
+            version: [
+              'ipv4',
+            ]
+          })
         }),
       },
       response: {
@@ -413,7 +433,11 @@ const init = async () => {
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
           active: Joi.boolean(),
-          podIp: Joi.string().ip()
+          podIp: Joi.string().ip({
+            version: [
+              'ipv4',
+            ]
+          })
         }),
       },
     },
@@ -456,7 +480,11 @@ const init = async () => {
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
           active: Joi.boolean(),
-          podIp: Joi.string().ip()
+          podIp: Joi.string().ip({
+            version: [
+              'ipv4',
+            ]
+          })
         }),
       },
     },
