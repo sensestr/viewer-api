@@ -14,7 +14,7 @@ env:
   GITHUB_SHA: ${{ github.sha }} 
   GITHUB_REF: ${{ github.ref }} 
   PROJECT_ID: sensestr
-  IMAGE: device-api
+  IMAGE: viewer-api
   REGISTRY_HOSTNAME: gcr.io
 
 
