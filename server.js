@@ -1,5 +1,5 @@
 /*
-    @title: The session service for the Sensestr application.
+    @title: The viewer api for the Sensestr application.
     @author: Piper Dougherty
     @email: doughertypiper@gmail.com
 
@@ -23,7 +23,7 @@ Joi.objectId = require("joi-objectid")(Joi);
 const mongoUsername = process.env.MONGO_USER || "sensestr";
 const mongoPassword = process.env.MONGO_PASSWORD || ""
 const mongoHost = process.env.MONGO_HOST || "sensestr-dev.io5pz.mongodb.net"
-const mongoUrl = `mongodb+srv://${mongoUsername}:${mongoPassword}@${mongoHost}/device?retryWrites=true&w=majority`
+const mongoUrl = `mongodb+srv://${mongoUsername}:${mongoPassword}@${mongoHost}/viewer?retryWrites=true&w=majority`
 
 const init = async () => {
   const server = Hapi.server({
@@ -110,9 +110,10 @@ const init = async () => {
 
   server.route({
     method: "GET",
-    path: "/devices",
+    path: "/viewers",
     options: {
       handler: async (request, h) => {
+
         const db = request.mongo.db;
         const ObjectID = request.mongo.ObjectID;
         const skip = request.query.skip;
@@ -130,18 +131,18 @@ const init = async () => {
         }
 
         const cursor = await request.mongo.db
-          .collection("devices")
+          .collection("viewers")
           .find(search)
           .skip(skip)
           .limit(limit);
 
         const count = await cursor.count({ applySkipLimit: true });
         const total = await cursor.count();
-        const devices = await cursor.toArray();
+        const viewers = await cursor.toArray();
 
-        devices.map((device) => {
-          device.id = device._id.toString();
-          delete device._id;
+        viewers.map((viewer) => {
+          viewer.id = viewer._id.toString();
+          delete viewer._id;
         });
 
         return h.response({
@@ -151,14 +152,14 @@ const init = async () => {
             limit: limit,
             total: total,
           },
-          results: devices,
+          results: viewers,
         });
 
       },
       validate: {
         query: Joi.object({
-          sessionId: Joi.objectId(),
           ownerId: Joi.string(),
+          sessionId: Joi.objectId(),
           skip: Joi.number().min(0).default(0),
           limit: Joi.number().min(1).max(100).default(25),
         }),
@@ -179,9 +180,9 @@ const init = async () => {
               creatorId: Joi.string(),
               updatorId: Joi.string(),
               ownerId: Joi.string(),
-              name: Joi.string().min(6).max(60).default("Unnamed Device"),
-              description: Joi.string(),
-              sessions: Joi.array().items(Joi.objectId())
+              sessionId: Joi.objectId(),
+              active: Joi.boolean(),
+              podIp: Joi.string().ip()
             })
           ),
         }),
@@ -191,7 +192,7 @@ const init = async () => {
 
   server.route({
     method: "POST",
-    path: "/devices",
+    path: "/viewers",
     options: {
       handler: async (request, h) => {
         const payload = request.payload;
@@ -213,7 +214,7 @@ const init = async () => {
         ) {
           return h.response(
             Boom.unauthorized(
-              "You cannot create a device for another user without the impersonate_user scope."
+              "You cannot create a viewer for another user without the impersonate_user scope."
             )
           );
         }
@@ -230,34 +231,33 @@ const init = async () => {
           );
         }
 
-        // TODO check sessions in payload exist.
-        // TODO remove duplicate sessions in sessions list from device payload.
+        // TODO check session in payload exist.
 
-        const device = {
+        const viewer = {
           _id: id,
           createdDate,
           updatedDate,
           creatorId: request.auth.credentials.user,
           updatorId: request.auth.credentials.user,
           ownerId,
-          name: payload.name,
-          description: payload.description,
-          sessions: payload.sessions
+          sessionId: payload.sessionId,
+          active: payload.active,
+          podIp: payload.podIp
         };
 
-        await db.collection("devices").insertOne(device);
+        await db.collection("viewers").insertOne(viewer);
 
-        device.id = id.toString();
-        delete device._id;
+        viewer.id = id.toString();
+        delete viewer._id;
 
-        return h.response(device);
+        return h.response(viewer);
       },
       validate: {
         payload: Joi.object({
           ownerId: Joi.string(),
-          name: Joi.string().min(6).max(60).default("Unnamed Device"),
-          description: Joi.string(),
-          sessions: Joi.array().items(Joi.objectId())
+          sessionId: Joi.objectId(),
+          active: Joi.boolean(),
+          podIp: Joi.string().ip()
         }),
       },
       response: {
@@ -268,9 +268,9 @@ const init = async () => {
           creatorId: Joi.string(),
           updatorId: Joi.string(),
           ownerId: Joi.string(),
-          name: Joi.string().min(6).max(60).default("Unnamed Device"),
-          description: Joi.string(),
-          sessions: Joi.array().items(Joi.objectId())
+          sessionId: Joi.objectId(),
+          active: Joi.boolean(),
+          podIp: Joi.string().ip()
         }),
       },
     },
@@ -281,19 +281,20 @@ const init = async () => {
     path: "/devices/{id}",
     options: {
       handler: async (request, h) => {
+
         const db = request.mongo.db;
         const ObjectID = request.mongo.ObjectID;
 
         const id = request.params.id;
         const search = { _id: new ObjectID(id) };
-        const device = await db.collection("devices").findOne(search);
+        const viewer = await db.collection("viewers").findOne(search);
 
-        if (device) {
-          device.id = device._id.toString();
-          delete device._id;
-          return h.response(device);
+        if (viewer) {
+          viewer.id = viewer._id.toString();
+          delete viewer._id;
+          return h.response(viewer);
         } else {
-          return h.response(Boom.notFound(`Device with id ${id} not found.`));
+          return h.response(Boom.notFound(`Viewer with id ${id} not found.`));
         }
       },
       validate: {
@@ -309,9 +310,9 @@ const init = async () => {
           creatorId: Joi.string(),
           updatorId: Joi.string(),
           ownerId: Joi.string(),
-          name: Joi.string().min(6).max(60).default("Unnamed Session"),
-          description: Joi.string(),
-          sessions: Joi.array().items(Joi.objectId())
+          sessionId: Joi.objectId(),
+          active: Joi.boolean(),
+          podIp: Joi.string().ip()
         }),
       },
     },
@@ -330,25 +331,23 @@ const init = async () => {
         const id = request.params.id;
         const search = { _id: new ObjectID(id) };
 
-        const device = await db.collection("devices").findOne(search);
+        const viewer = await db.collection("viewers").findOne(search);
 
-        if (device) {
+        if (viewer) {
 
           const updatedDate = new Date();
           const updatorId = request.auth.credentials.user;
-          let ownerId = payload.ownerId ? payload.ownerId : device.ownerId;
-          const sessionSet = new Set(payload.sessions)
-          const sessionIds = sessionSet.map(session => {new ObjectID(session)})
+          let ownerId = payload.ownerId ? payload.ownerId : viewer.ownerId;
 
           if (
             payload.ownerId &&
-            payload.ownerId !== device.ownerId &&
+            payload.ownerId !== viewer.ownerId &&
             (!request.auth.credentials.isMachine ||
               !request.auth.credentials.scopes.contains("impersonate_user"))
           ) {
             return h.response(
               Boom.unauthorized(
-                "You cannot change a session owner to another user without the impersonate_user scope."
+                "You cannot change a viewer owner to another user without the impersonate_user scope."
               )
             );
           }
@@ -366,32 +365,31 @@ const init = async () => {
           }
 
           // TODO make sure that new sessions exist.
-          // TODO remove duplicate sessions for sessions attribute in device payload.
 
-          await db.collection("devices").updateOne(search, {
+          await db.collection("viewers").updateOne(search, {
             $set: {
               updatedDate,
               updatorId,
               ownerId,
-              name: payload.name,
-              description: payload.description,
-              sessions: sessionIds
+              sessionId: payload.sessionId,
+              active: payload.active,
+              podIp: payload.podIp
             },
           });
 
           // Merge the updated values with the existing object.
           return h.response({
-            ...device,
+            ...viewer,
             updatedDate,
             updatorId,
             ownerId,
-            name: payload.name,
-            description: payload.description,
-            sessions: [...sessionSet]
+            sessionId: payload.sessionId,
+            active: payload.active,
+            podIp: payload.podIp
           });
 
         } else {
-          return h.response(Boom.notFound(`Device with id ${id} not found.`));
+          return h.response(Boom.notFound(`Viewer with id ${id} not found.`));
         }
       },
       validate: {
@@ -400,9 +398,9 @@ const init = async () => {
         }),
         payload: Joi.object({
           ownerId: Joi.string(),
-          name: Joi.string().min(6).max(60).default("Unnamed Device"),
-          description: Joi.string(),
-          sessions: Joi.array().items(Joi.objectId())
+          sessionId: Joi.objectId(),
+          active: Joi.boolean(),
+          podIp: Joi.string().ip()
         }),
       },
       response: {
@@ -413,9 +411,9 @@ const init = async () => {
           creatorId: Joi.string(),
           updatorId: Joi.string(),
           ownerId: Joi.string(),
-          name: Joi.string().min(6).max(60).default("Unnamed Device"),
-          description: Joi.string(),
-          sessions: Joi.array().items(Joi.objectId())
+          sessionId: Joi.objectId(),
+          active: Joi.boolean(),
+          podIp: Joi.string().ip()
         }),
       },
     },
@@ -423,7 +421,7 @@ const init = async () => {
 
   server.route({
     method: "DELETE",
-    path: "/devices/{id}",
+    path: "/viewers/{id}",
     options: {
       handler: async (request, h) => {
 
@@ -433,14 +431,14 @@ const init = async () => {
         const id = request.params.id;
 
         const search = { _id: new ObjectID(id) };
-        const device = await db.collection("devices").findOne(search);
+        const viewer = await db.collection("viewers").findOne(search);
 
-        if (device) {
-          device.id = device._id.toString();
-          delete device._id;
-          return h.response(device);
+        if (viewer) {
+          viewer.id = viewer._id.toString();
+          delete viewer._id;
+          return h.response(viewer);
         } else {
-          return h.response(Boom.notFound(`Device with id ${id} not found.`));
+          return h.response(Boom.notFound(`Viewer with id ${id} not found.`));
         }
       },
       validate: {
@@ -456,9 +454,9 @@ const init = async () => {
           creatorId: Joi.string(),
           updatorId: Joi.string(),
           ownerId: Joi.string(),
-          name: Joi.string().min(6).max(60).default("Unnamed Device"),
-          description: Joi.string(),
-          sessions: Joi.array().items(Joi.objectId())
+          sessionId: Joi.objectId(),
+          active: Joi.boolean(),
+          podIp: Joi.string().ip()
         }),
       },
     },
