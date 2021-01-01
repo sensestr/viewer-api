@@ -1,0 +1,57 @@
+name: Build and Push to GCR
+
+on:
+  push:
+    tags:
+     - "*"
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+  
+env:
+  GITHUB_SHA: ${{ github.sha }} 
+  GITHUB_REF: ${{ github.ref }} 
+  PROJECT_ID: sensestr
+  IMAGE: device-api
+  REGISTRY_HOSTNAME: gcr.io
+
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, and Publish
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout the repository.
+      uses: actions/checkout@v2
+
+    - name: Log in to Google Cloud Platform.
+      uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        service_account_key: ${{ secrets.GCR_CREDENTIALS }} 
+        export_default_credentials: true
+
+    - name: Configure Docker to use Google Container Registry credentials.
+      run: |
+        gcloud auth configure-docker
+
+    - name: Generate the image tag.
+      id: image-tag
+      uses: yuya-takeyama/docker-tag-from-github-ref-action@v1
+    
+    - name: Print out the image tag.
+      run: |
+        echo ${{ steps.image-tag.outputs.tag }}
+
+    - name: Build the Docker image.
+      run: |
+        docker build -t "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":${{ steps.image-tag.outputs.tag }} \
+          --build-arg GITHUB_SHA="$GITHUB_SHA" \
+          --build-arg GITHUB_REF="$GITHUB_REF" .
+
+    - name: Publish the Docker image to Google Container Registry.
+      run: |
+        docker push "$REGISTRY_HOSTNAME"/"$PROJECT_ID"/"$IMAGE":${{ steps.image-tag.outputs.tag }}

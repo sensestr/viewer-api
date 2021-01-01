@@ -1,0 +1,17 @@
+# Docker Compose file for local development.
+version: '3.7'
+services:
+  sessionapi:
+    build: .
+    ports:
+      - 3000:3000
+    environment:
+      MONGO_URL: mongodb://mongodb:27017/session
+  mongodb:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb_data:/data/db
+volumes:
+  mongodb_data:
