@@ -186,7 +186,8 @@ const init = async () => {
                 version: [
                   'ipv4',
                 ]
-              })
+              }),
+              socketId: Joi.string()
             })
           ),
         }),
@@ -246,7 +247,8 @@ const init = async () => {
           ownerId,
           sessionId: payload.sessionId,
           active: payload.active,
-          podIp: payload.podIp
+          podIp: payload.podIp,
+          socketId: payload.socketId
         };
 
         await db.collection("viewers").insertOne(viewer);
@@ -265,7 +267,8 @@ const init = async () => {
             version: [
               'ipv4',
             ]
-          })
+          }),
+          socketId: Joi.string()
         }),
       },
       response: {
@@ -282,7 +285,8 @@ const init = async () => {
             version: [
               'ipv4',
             ]
-          })
+          }),
+          socketId: Joi.string()
         }),
       },
     },
@@ -328,7 +332,8 @@ const init = async () => {
             version: [
               'ipv4',
             ]
-          })
+          }),
+          socketId: Joi.string()
         }),
       },
     },
@@ -389,7 +394,8 @@ const init = async () => {
               ownerId,
               sessionId: payload.sessionId,
               active: payload.active,
-              podIp: payload.podIp
+              podIp: payload.podIp,
+              socketId: payload.socketId,
             },
           });
 
@@ -401,7 +407,8 @@ const init = async () => {
             ownerId,
             sessionId: payload.sessionId,
             active: payload.active,
-            podIp: payload.podIp
+            podIp: payload.podIp,
+            socketId: Joi.string()
           });
 
         } else {
@@ -420,7 +427,8 @@ const init = async () => {
             version: [
               'ipv4',
             ]
-          })
+          }),
+          socketId: Joi.string()
         }),
       },
       response: {
@@ -437,7 +445,8 @@ const init = async () => {
             version: [
               'ipv4',
             ]
-          })
+          }),
+          socketId: Joi.string()
         }),
       },
     },
@@ -484,7 +493,8 @@ const init = async () => {
             version: [
               'ipv4',
             ]
-          })
+          }),
+          socketId: Joi.string()
         }),
       },
     },
