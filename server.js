@@ -24,10 +24,11 @@ const mongoUsername = process.env.MONGO_USER || "sensestr";
 const mongoPassword = process.env.MONGO_PASSWORD || ""
 const mongoHost = process.env.MONGO_HOST || "sensestr-dev.io5pz.mongodb.net"
 const mongoUrl = `mongodb+srv://${mongoUsername}:${mongoPassword}@${mongoHost}/viewer?retryWrites=true&w=majority`
+const port = process.env.PORT || 3000
 
 const init = async () => {
   const server = Hapi.server({
-    port: 3000,
+    port: port,
     host: "0.0.0.0",
     routes: {
       cors: {
