@@ -209,6 +209,7 @@ const init = async () => {
         const id = new ObjectID();
         const createdDate = new Date();
         const updatedDate = new Date();
+        const creatorId = request.auth.credentials.user;
 
         let ownerId = payload.ownerId ? payload.ownerId : creatorId;
 
