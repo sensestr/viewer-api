@@ -181,14 +181,7 @@ const init = async () => {
               creatorId: Joi.string(),
               updatorId: Joi.string(),
               ownerId: Joi.string(),
-              sessionId: Joi.objectId(),
-              active: Joi.boolean(),
-              podIp: Joi.string().ip({
-                version: [
-                  'ipv4',
-                ]
-              }),
-              socketId: Joi.string()
+              sessionId: Joi.objectId()
             })
           ),
         }),
@@ -248,9 +241,6 @@ const init = async () => {
           updatorId: request.auth.credentials.user,
           ownerId,
           sessionId: payload.sessionId,
-          active: payload.active,
-          podIp: payload.podIp,
-          socketId: payload.socketId
         };
 
         await db.collection("viewers").insertOne(viewer);
@@ -264,13 +254,6 @@ const init = async () => {
         payload: Joi.object({
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
-          active: Joi.boolean(),
-          podIp: Joi.string().ip({
-            version: [
-              'ipv4',
-            ]
-          }),
-          socketId: Joi.string()
         }),
       },
       response: {
@@ -282,13 +265,6 @@ const init = async () => {
           updatorId: Joi.string(),
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
-          active: Joi.boolean(),
-          podIp: Joi.string().ip({
-            version: [
-              'ipv4',
-            ]
-          }),
-          socketId: Joi.string()
         }),
       },
     },
@@ -329,13 +305,6 @@ const init = async () => {
           updatorId: Joi.string(),
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
-          active: Joi.boolean(),
-          podIp: Joi.string().ip({
-            version: [
-              'ipv4',
-            ]
-          }),
-          socketId: Joi.string()
         }),
       },
     },
@@ -395,9 +364,6 @@ const init = async () => {
               updatorId,
               ownerId,
               sessionId: payload.sessionId,
-              active: payload.active,
-              podIp: payload.podIp,
-              socketId: payload.socketId,
             },
           });
 
@@ -408,9 +374,6 @@ const init = async () => {
             updatorId,
             ownerId,
             sessionId: payload.sessionId,
-            active: payload.active,
-            podIp: payload.podIp,
-            socketId: Joi.string()
           });
 
         } else {
@@ -424,13 +387,6 @@ const init = async () => {
         payload: Joi.object({
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
-          active: Joi.boolean(),
-          podIp: Joi.string().ip({
-            version: [
-              'ipv4',
-            ]
-          }),
-          socketId: Joi.string()
         }),
       },
       response: {
@@ -442,13 +398,6 @@ const init = async () => {
           updatorId: Joi.string(),
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
-          active: Joi.boolean(),
-          podIp: Joi.string().ip({
-            version: [
-              'ipv4',
-            ]
-          }),
-          socketId: Joi.string()
         }),
       },
     },
@@ -490,13 +439,6 @@ const init = async () => {
           updatorId: Joi.string(),
           ownerId: Joi.string(),
           sessionId: Joi.objectId(),
-          active: Joi.boolean(),
-          podIp: Joi.string().ip({
-            version: [
-              'ipv4',
-            ]
-          }),
-          socketId: Joi.string()
         }),
       },
     },

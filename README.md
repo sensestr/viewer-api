@@ -13,7 +13,5 @@ The viewer API for the Sensestr application.
     "updatorId": "5feeb94f1f0a4899eacf556f",
     "ownerId": "5feeb94f1f0a4899eacf556f",
     "sessionId": "5feeb94f1f0a4899eacf556f",
-    "active": true,
-    "podIp": "85.67.175.75"
 }
 ```
