@@ -420,6 +420,9 @@ const init = async () => {
         if (viewer) {
           viewer.id = viewer._id.toString();
           delete viewer._id;
+
+          await db.collection("viewers").deleteOne(search)
+
           return h.response(viewer);
         } else {
           return h.response(Boom.notFound(`Viewer with id ${id} not found.`));
