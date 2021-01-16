@@ -17,6 +17,8 @@ const Joi = require("joi");
 const HapiMongoDB = require("hapi-mongodb");
 const HapiPino = require("hapi-pino");
 const HapiJwt = require("@hapi/jwt");
+const Axios = require('axios').default;
+const io = require('socket.io-client')
 
 Joi.objectId = require("joi-objectid")(Joi);
 
@@ -25,6 +27,63 @@ const mongoPassword = process.env.MONGO_PASSWORD || ""
 const mongoHost = process.env.MONGO_HOST || "sensestr-dev.io5pz.mongodb.net"
 const mongoUrl = `mongodb+srv://${mongoUsername}:${mongoPassword}@${mongoHost}/viewer?retryWrites=true&w=majority`
 const port = process.env.PORT || 3000
+const clientId = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+const eventApiBase = process.env.EVENT_API_BASE;
+
+const eventApiPlugin = {
+  name: 'eventApi',
+  version: '1.0.0',
+  register: async function (server, options) {
+
+    server.logger.info(options, "Registering the event API plugin.")
+
+    const expose = {
+      token: '',
+      socket: null
+    }
+
+    const getToken = async function () {
+      server.logger.info("Fetching token.")
+
+      var requestOptions = {
+        method: 'POST',
+        url: 'https://sensestr-prod.us.auth0.com/oauth/token',
+        headers: { 'content-type': 'application/json' },
+        data: {
+          grant_type: 'client_credentials',
+          client_id: options.clientId,
+          client_secret: options.clientSecret,
+          audience: options.aud
+        }
+      };
+
+      Axios.request(requestOptions).then(function (response) {
+        server.logger.info(response.data, "Retrieved token.")
+        expose.token = response.data['access_token'];
+      }).catch(function (error) {
+        server.logger.error(error.response.data, `Error fetching token.`)
+      });
+
+      setTimeout(getToken, options.refreshPeriod)
+    }
+    getToken()
+
+    const getSocket = async function () {
+      server.logger.info("Connecting to the event API socket.")
+      const socket = io(options.eventApiBase, {path: '/events'})
+      socket.on('connect', () => {
+        server.logger.info({sid: socket.id}, `Connected to event API socket.`)
+      })
+      expose.socket = socket
+    }
+    getSocket()
+
+    server.decorate('server', 'eventApi', expose);
+    server.decorate('request', 'eventApi', expose);
+
+  }
+}
 
 const init = async () => {
   const server = Hapi.server({
@@ -69,6 +128,16 @@ const init = async () => {
     {
       plugin: HapiJwt,
     },
+    {
+      plugin: eventApiPlugin,
+      options: {
+        clientId,
+        clientSecret,
+        aud: "https://sensestr.io/api",
+        refreshPeriod: 3.5e7,
+        eventApiBase
+      }
+    }
   ]);
 
   server.auth.strategy("auth0", "jwt", {
@@ -198,6 +267,8 @@ const init = async () => {
 
         const db = request.mongo.db;
         const ObjectID = request.mongo.ObjectID;
+        const token = request.eventApi.token;
+        const socket = request.eventApi.socket;
 
         const id = new ObjectID();
         const createdDate = new Date();
@@ -247,6 +318,14 @@ const init = async () => {
 
         viewer.id = id.toString();
         delete viewer._id;
+
+        const event = {
+          event: 'viewer created',
+          token,
+          viewerId: viewer.id,
+          viewer
+        }
+        socket.emit(event.event, event)
 
         return h.response(viewer);
       },
@@ -319,6 +398,8 @@ const init = async () => {
 
         const db = request.mongo.db;
         const ObjectID = request.mongo.ObjectID;
+        const token = request.eventApi.token;
+        const socket = request.eventApi.socket;
 
         const id = request.params.id;
         const search = { _id: new ObjectID(id) };
@@ -367,14 +448,24 @@ const init = async () => {
             },
           });
 
-          // Merge the updated values with the existing object.
-          return h.response({
+          const updatedViewer = {
             ...viewer,
             updatedDate,
             updatorId,
             ownerId,
             sessionId: payload.sessionId,
-          });
+          }
+
+          const event = {
+            event: 'viewer updated',
+            token,
+            viewerId: updatedViewer.id,
+            viewer: updatedViewer
+          }
+          socket.emit(event.event, event)
+
+          // Merge the updated values with the existing object.
+          return h.response(updatedViewer);
 
         } else {
           return h.response(Boom.notFound(`Viewer with id ${id} not found.`));
@@ -411,6 +502,8 @@ const init = async () => {
 
         const db = request.mongo.db;
         const ObjectID = request.mongo.ObjectID;
+        const token = request.eventApi.token;
+        const socket = request.eventApi.socket;
 
         const id = request.params.id;
 
@@ -422,6 +515,14 @@ const init = async () => {
           delete viewer._id;
 
           await db.collection("viewers").deleteOne(search)
+
+          const event = {
+            event: 'viewer deleted',
+            token,
+            viewerId: viewer.id,
+            viewer
+          }
+          socket.emit(event.event, event)
 
           return h.response(viewer);
         } else {
