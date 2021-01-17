@@ -111,7 +111,7 @@ const init = async () => {
         logRequestStart: true,
         logRequestComplete: true,
         level: "debug",
-        prettyPrint: true,
+        prettyPrint: false,
       },
     },
     {
