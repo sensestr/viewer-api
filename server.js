@@ -133,7 +133,7 @@ const init = async () => {
       options: {
         clientId,
         clientSecret,
-        aud: "https://sensestr.io/api",
+        aud: "https://api.sensestr.io",
         refreshPeriod: 3.5e7,
         eventApiBase
       }
@@ -146,7 +146,7 @@ const init = async () => {
       algorithms: ["RS256"],
     },
     verify: {
-      aud: "https://sensestr.io/api",
+      aud: "https://api.sensestr.io",
       iss: "https://sensestr-prod.us.auth0.com/",
       sub: false,
     },
